@@ -16,12 +16,13 @@
 
             <div class="list-group">
                 {% for deck in decks %}
-                a href="#" class="list-group-item list-group-item-action>
+                <a href="#" class="list-group-item list-group-item-action">
                     <h5 class="mb-1">{{ deck.name }}</h5>
-                    <p class="mb-1">Formato: {{ deck.format }}</p>
+                    <p class="mb-1">Formato: {{ deck.get_format_display }}</p>
                     </a>
                     {% empty %}
                     <div class="list-group-item">
+                        Você ainda não criou Decks.
                     </div>
                     {% endfor %}
             </div>
