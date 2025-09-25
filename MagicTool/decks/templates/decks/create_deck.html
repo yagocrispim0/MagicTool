@@ -30,10 +30,87 @@
                     <option value ="NON">Sem Formato</option>
                 </select>
             </div>
+            <hr>
+            <div class="mb-3">
+                <label for="cardSearch" class="form-label">Pesquisar Carta</label>
+                <input type="text" class="form-control" id="cardSearch" placeholder="Digite o nome da carta" autocomplete="off">
+                <div id="searchResults" class="list-group mt-2"></div>
+            </div>
+            <h5>Cartas adicionadas (<span id="cardCount">0</span>)</h5>
+            <ul id="deckList" class="list-group mb-3"></ul>
+            <input type="hidden" name="card_list" id="cardListInput">
+            <hr>
+            <button type="submit" class="btn btn-primary">Salvar Deck</button>
+
+            
+            <hr>
 
             <button type="submit" class="btn btn-primary">Criar Deck</button>
             </form>
         </div>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+        <script>
+            const searchCard = document.getElementById('cardSearch');
+            const resultsDiv = document.getElementById('searchResults');
+            const deckListUl = document.getElementById('deckList');
+            const cardCountSpan = document.getElementById('cardCount');
+            const cardListInput = document.getElementById('cardListInput');
+            let timer;
+
+            searchCard.addEventListener('keyup', (e) => {
+                const nomeCard = e.target.value;
+                // Limpa o timer anterior
+                clearTimeout(timer);
+                // Se o input tiver 2 ou menos caracteres, limpa os resultados e para.
+                if (nomeCard.length <2){
+                    resultsDiv.innerHTML = '';
+                    return;
+                }
+
+                //Define um novo timer
+                timer = setTimeout(() => {
+                    fetch(`/decks/api/card-autocomplete/?card=${nomeCard}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        resultsDiv.innerHTML = '';
+
+                        data.forEach(cardName => {
+                            const link = document.createElement('a');
+                            link.href = '#';
+                            link.className = 'list-group-item list-group-item-action';
+                            link.innerText = cardName;
+
+                            link.addEventListener('click', (e) => {
+                                e.preventDefault();
+
+                                //Adiciona carta a lista visivel
+                                const listItem = document.createElement('li');
+                                listItem.className = 'list-group-item';
+                                listItem.innerText = cardName;
+                                deckListUl.appendChild(listItem);
+
+                                //Adiciona carta ao hidden input
+                                if (cardListInput.value == ''){
+                                    cardListInput.value = cardName;
+                                } else {
+                                    cardListInput.value += ',' + cardName;
+                                }
+
+                                //Update o contador
+                                cardCountSpan.innterText = deckListUl.children.length;
+
+                                //Limpa a barra de pesquisa e os resultados
+                                searchCard.value = '';
+                                resultsDiv.innerHTML = '';
+                            })
+
+
+                            resultsDiv.appendChild(link);
+                        })
+                    })
+                .catch(error => console.error('Error:', error));
+                }, 100);
+                })
+        </script>
     </body>
 </html>
