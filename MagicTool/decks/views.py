@@ -67,6 +67,10 @@ def decks_list(request):
     context = {'decks': all_decks}
     return render(request, 'decks/decks_list.html', context)
 
+# Homepage redireciona para a lista de decks
+def home(request):
+    return redirect('decks_list')
+
 # Autocompletar nomes de cartas usando a API Scryfall
 def card_autocomplete(request):
     
@@ -74,8 +78,9 @@ def card_autocomplete(request):
 
     if len(query) > 1:
         scryfall_url = f"https://api.scryfall.com/cards/autocomplete?q={query}"
+        headers = {'User-Agent': 'MagicTool/1.0'}
         try:
-            response = requests.get(scryfall_url)
+            response = requests.get(scryfall_url, headers=headers)
             response.raise_for_status()
             data = response.json()
             card_names = data.get('data', [])
