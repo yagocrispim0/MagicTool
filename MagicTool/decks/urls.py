@@ -3,6 +3,8 @@ from . import views
 
 urlpatterns = [
 
+    #URL para editar os detalhes de um deck específico
+    path('<int:deck_id>/edit/', views.edit_deck, name='edit_deck'),
     #URL para ver detalhes de um deck específico
     path('<int:deck_id>/', views.deck_detail, name='deck_detail'),
     #URL para listar decks criados

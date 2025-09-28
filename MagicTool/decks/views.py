@@ -4,9 +4,40 @@ from django.shortcuts import render, redirect, get_object_or_404
 from .models import Deck, Card
 
 
+def edit_deck(request, deck_id):
+
+    deck = get_object_or_404(Deck, id=deck_id)
+
+    if request.method == 'POST':
+        deck_name = request.POST.get('deck_name')
+        deck_format = request.POST.get('deck_format')
+        deck.name = deck_name
+        deck.format = deck_format
+        deck.save()
+
+        card_list_str = request.POST.get('card_list', '')
+        deck.cards.clear()
+        if card_list_str:
+            card_names = card_list_str.split('||')
+            for name in card_names:
+                card_obj, created = Card.objects.get_or_create(name=name.strip())
+                deck.cards.add(card_obj)
+        return redirect ('deck_detail', deck_id=deck.id)
+
+    context = {'deck': deck,
+               'formats': Deck.FormatChoices.choices}
+    return render(request, 'decks/edit_deck.html', context)
+
+
+
 def deck_detail(request, deck_id):
 
     deck = get_object_or_404(Deck, id=deck_id)
+    
+    if request.method == 'POST':
+        deck.delete()
+        return redirect('decks_list')
+
     context = {'deck': deck}
     return render(request, 'decks/deck_detail.html', context)
 
@@ -21,13 +52,10 @@ def create_deck(request):
         card_list_str = request.POST.get('card_list', '')
 
         if card_list_str:
-            card_names = card_list_str.split(',')
+            card_names = card_list_str.split('||')
             for name in card_names:
                 card_obj, created = Card.objects.get_or_create(name=name.strip())
                 new_deck.cards.add(card_obj)
-
-        Deck.objects.create(name=deck_name, format=deck_format)
-
         return  redirect('deck_detail', deck_id=new_deck.id)
     
     return render(request, 'decks/create_deck.html')

@@ -16,8 +16,7 @@
 
             <div class="list-group">
                 {% for deck in decks %}
-                <a href="{% url 'deck_detail' deck.id
-                 %}" class="list-group-item list-group-item-action">
+                <a href="{% url 'deck_detail' deck.id %}" class="list-group-item list-group-item-action">
                     <h5 class="mb-1">{{ deck.name }}</h5>
                     <p class="mb-1">Formato: {{ deck.get_format_display }}</p>
                     </a>
