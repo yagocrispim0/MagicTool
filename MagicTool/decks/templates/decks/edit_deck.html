@@ -5,20 +5,7 @@
             <hr>
             <form method="POST">
                 {% csrf_token %}
-
-                <div class="mb-3">
-                    <label for="deckName" class="form-label">Nome do Deck</label>
-                    <input type="text" class="form-control" id="deckName" name="deck_name" value="{{ deck.name }}">
-                </div>
-
-            <div class="mb-3">
-                <label for="deckFormat" class="form-label">Formato do Deck</label>
-                <select class="form-select" id="deckFormat" name="deck_format">
-                    {% for code, name in formats %}
-                    <option value ="{{code}}" {% if deck.format == code  %}selected{% endif %}>{{name}}</option>
-                    {% endfor %}
-                </select>
-            </div>
+                {{ form.as_p }}
             <hr>
             <div class="mb-3">
                 <label for="cardSearch" class="form-label">Pesquisar Carta</label>
@@ -34,7 +21,7 @@
                 </li>
                 {% endfor %}
             </ul>
-            <input type="hidden" name="card_list" id="cardListInput">
+            <input type="hidden" name="card_list" id="cardListInput" value="{% for card in deck.cards.all %}{{ card.name }}{% if not forloop.last %}||{% endif %}{% endfor %}">
             <hr>
             <button type="submit" class="btn btn-primary">Salvar Deck</button>         
             <hr>
@@ -51,7 +38,6 @@
             let timer;
 
             
-
             deckListUl.addEventListener('click', (e) => {
                 if (e.target.classList.contains('remove-card-btn')) {
                     const cardName = e.target.getAttribute('data-card-name');
@@ -90,8 +76,9 @@
 
                                 //Adiciona carta a lista visivel
                                 const listItem = document.createElement('li');
-                                listItem.className = 'list-group-item';
-                                listItem.innerText = cardName;
+                                listItem.className = 'list-group-item d-flex justify-content-between align-items-center';
+                                listItem.innerHTML = `<span>${cardName}</span>
+                                                    <button type="button" class="btn btn-danger btn-sm remove-card-btn" data-card-name="${cardName}">Deletar Carta</button>`;
                                 deckListUl.appendChild(listItem);
 
                                 //Adiciona carta ao hidden input

@@ -6,24 +6,7 @@
             <hr>
             <form method="POST">
                 {% csrf_token %}
-
-                <div class="mb-3">
-                    <label for="deckName" class="form-label">Nome do Deck</label>
-                    <input type="text" class="form-control" id="deckName" name="deck_name" autocomplete="off">
-                </div>
-
-            <div class="mb-3">
-                <label for="deckFormat" class="form-label">Formato do Deck</label>
-                <select class="form-select" id="deckFormat" name="deck_format">
-                    <option value ="STD">Standard</option>
-                    <option value ="MOD">Modern</option>
-                    <option value ="LGC">Legacy</option>
-                    <option value ="VIN">Vintage</option>
-                    <option value ="EDH">Commander</option>
-                    <option value ="PPR">Pauper</option>
-                    <option value ="NON">Sem Formato</option>
-                </select>
-            </div>
+                {{ form.as_p }}
             <hr>
             <div class="mb-3">
                 <label for="cardSearch" class="form-label">Pesquisar Carta</label>
