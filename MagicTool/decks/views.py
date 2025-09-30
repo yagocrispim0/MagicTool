@@ -2,7 +2,7 @@ import requests
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.cache import never_cache
-from .models import Deck, Card
+from .models import Deck, Card, DeckCard
 from .forms import DeckForm
 
 # Edita um deck existente
@@ -54,17 +54,22 @@ def create_deck(request):
         form = DeckForm(request.POST)
 
         if form.is_valid():
-            new_deck = form.save()
+            deck = form.save()
 
             card_list_str = request.POST.get('card_list', '')
             if card_list_str:
-                card_names = card_list_str.split('||')
-                for name in card_names:
-                    card_obj, created = Card.objects.get_or_create(name=name.strip())
-                    new_deck.cards.add(card_obj)
+                cardsInfo = card_list_str.split(';;')
+                for cardInfo in cardsInfo:
+                    if len(cardInfo.split('||')) == 2:
+                        quantityStr, name = cardInfo.split('||')
+                        try:
+                            quantity = int(quantityStr.strip())
+                            card_obj, created = Card.objects.get_or_create(name=name.strip())
+                            DeckCard.objects.create(deck=deck, card=card_obj, quantity=quantity)
+                        except ValueError:
+                            continue
 
-            return redirect('deck_detail', deck_id=new_deck.id)
-
+            return redirect ('deck_detail', deck_id=deck.id)
     else:
         form = DeckForm()
 

@@ -16,11 +16,15 @@ class Deck(models.Model):
 
     name = models.CharField(max_length=200)
     format = models.CharField(max_length=3, choices=FormatChoices.choices, default=FormatChoices.NONE)
-    cards = models.ManyToManyField('Card')
+    cards = models.ManyToManyField('Card', through='DeckCard', related_name='decks')    
 
     def __str__(self):
         return self.name
 
+class DeckCard(models.Model):
+    deck = models.ForeignKey(Deck, on_delete=models.CASCADE)
+    card = models.ForeignKey('Card', on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField(default=1)
 
 class Card(models.Model):
     scryfall_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)

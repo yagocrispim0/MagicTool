@@ -1,92 +1,86 @@
 {% extends 'decks/base.html' %}
 {% block content %}
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
-        <div class="container mt-5">
-            <h1> Crie um novo Deck</h1>
-            <hr>
-            <form method="POST">
-                {% csrf_token %}
-                {{ form.as_p }}
-            <hr>
-            <div class="mb-3">
-                <label for="cardSearch" class="form-label">Pesquisar Carta</label>
-                <input type="text" class="form-control" id="cardSearch" placeholder="Digite o nome da carta" autocomplete="off" data-autocomplete-url="{% url 'card_autocomplete' %}">  
-                <div id="searchResults" class="list-group mt-2"></div>
+<div class="container mt-5"
+     x-data="{
+        cards: [],
+        searchName: '',
+        searchResults: [],
+
+        searchCards() {
+            if (this.searchName.length < 2) {
+                this.searchResults = [];
+                return;
+            }
+            const autocompleteUrl = document.getElementById('cardSearch').dataset.autocompleteUrl;
+            fetch(`${autocompleteUrl}?card=${this.searchName}`)
+                .then(response => response.json())
+                .then(data => this.searchResults = data);
+        },
+
+        addCard(cardName) {
+            const existingCard = this.cards.find(card => card.name === cardName);
+            if (existingCard) {
+                existingCard.quantity++;
+            } else {
+                this.cards.push({ name: cardName, quantity: 1 });
+            }
+            this.searchName = '';
+            this.searchResults = [];
+        },
+
+        removeCard(index) {
+            this.cards.splice(index, 1);
+        },
+
+        get totalCards() {
+            return this.cards.reduce((total, card) => total + Number(card.quantity), 0);
+        },
+
+        get hiddenInputValue() {
+            return this.cards.map(card => `${card.quantity}||${card.name}`).join(';;');
+        }
+     }"
+>
+    <h1>Crie um novo Deck</h1>
+    <hr>
+    <form method="POST">
+        {% csrf_token %}
+        {{ form.as_p }}
+
+        <hr>
+        <div class="mb-3">
+            <label for="cardSearch" class="form-label">Pesquisar Carta</label>
+            <input type="text" id="cardSearch" class="form-control"
+                   x-model="searchName"
+                   @keyup.debounce.100ms="searchCards()"
+                   placeholder="Digite o nome da carta" autocomplete="off"
+                   data-autocomplete-url="{% url 'card_autocomplete' %}">
+
+            <div class="list-group mt-1">
+                <template x-for="cardName in searchResults" :key="cardName">
+                    <a href="#" @click.prevent="addCard(cardName)" class="list-group-item list-group-item-action" x-text="cardName"></a>
+                </template>
             </div>
-            <h5>Cartas adicionadas (<span id="cardCount">0</span>)</h5>
-            <ul id="deckList" class="list-group mb-3"></ul>
-            <input type="hidden" name="card_list" id="cardListInput">
-            <hr>
-            <button type="submit" class="btn btn-primary">Salvar Deck</button>  
-            
-            <hr>
-
-            <button type="submit" class="btn btn-primary">Criar Deck</button>
-            </form>
         </div>
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-        <script>
-            const searchCard = document.getElementById('cardSearch');
-            const resultsDiv = document.getElementById('searchResults');
-            const deckListUl = document.getElementById('deckList');
-            const cardCountSpan = document.getElementById('cardCount');
-            const cardListInput = document.getElementById('cardListInput');
-            const autocompleteUrl = searchCard.dataset.autocompleteUrl;
-            let timer;
 
-            searchCard.addEventListener('keyup', (e) => {
-                const nomeCard = e.target.value;
-                // Limpa o timer anterior
-                clearTimeout(timer);
-                // Se o input tiver 2 ou menos caracteres, limpa os resultados e para.
-                if (nomeCard.length <2){
-                    resultsDiv.innerHTML = '';
-                    return;
-                }
+        <h5>Cartas adicionadas (<span x-text="totalCards"></span>)</h5>
+        <ul class="list-group mb-3">
+            <template x-for="(card, index) in cards" :key="index">
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span x-text="card.name"></span>
+                    <div class="d-flex align-items-center">
+                        <input type="number" x-model.number="card.quantity" class="form-control form-control-sm" min="1" style="width: 60px;">
+                        <button type="button" @click="removeCard(index)" class="btn btn-danger btn-sm ms-2">X</button>
+                    </div>
+                </li>
+            </template>
+        </ul>
 
-                //Define um novo timer
-                timer = setTimeout(() => {
-                    fetch(`${autocompleteUrl}?card=${nomeCard}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        resultsDiv.innerHTML = '';
-
-                        data.forEach(cardName => {
-                            const link = document.createElement('a');
-                            link.href = '#';
-                            link.className = 'list-group-item list-group-item-action';
-                            link.innerText = cardName;
-
-                            link.addEventListener('click', (e) => {
-                                e.preventDefault();
-
-                                //Adiciona carta a lista visivel
-                                const listItem = document.createElement('li');
-                                listItem.className = 'list-group-item';
-                                listItem.innerText = cardName;
-                                deckListUl.appendChild(listItem);
-
-                                //Adiciona carta ao hidden input
-                                if (cardListInput.value == ''){
-                                    cardListInput.value = cardName;
-                                } else {
-                                    cardListInput.value += '||' + cardName;
-                                }
-
-                                //Update o contador
-                                cardCountSpan.innerText = deckListUl.children.length;
-
-                                //Limpa a barra de pesquisa e os resultados
-                                searchCard.value = '';
-                                resultsDiv.innerHTML = '';
-                            })
-
-
-                            resultsDiv.appendChild(link);
-                        })
-                    })
-                .catch(error => console.error('Error:', error));
-                }, 100);
-                })
-        </script>
+        <input type="hidden" name="card_list" :value="hiddenInputValue">
+        <hr>
+        <button type="submit" class="btn btn-primary">Salvar Deck</button>
+    </form>
+</div>
 {% endblock %}

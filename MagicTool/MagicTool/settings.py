@@ -78,8 +78,8 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'magictool',
-        'USER': '0',
-        'PASSWORD': '0',
+        'USER': 'usuario',
+        'PASSWORD': '12345',
         'HOST': 'localhost',
         'PORT': '5432',
     }
